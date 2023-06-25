@@ -2,13 +2,19 @@
 
 pragma solidity ^0.8.9;
 
-import '../node_modules/@openzeppelin/contracts/access/AccessControl.sol';
-import '../node_modules/@openzeppelin/contracts/security/Pausable.sol';
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "./PrescriptionToken.sol";
+import "./ProductToken.sol";
 
-contract Controller is AccessControl, Pausable{
+contract Controller is AccessControl, Pausable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    PrescriptionToken private prescriptionToken;
+    ProductToken private productToken;
 
-    constructor() {
+    constructor(address _prescriptionToken, address _productToken) {
+        prescriptionToken = PrescriptionToken(_prescriptionToken);
+        productToken = ProductToken(_productToken);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
     }
@@ -19,5 +25,27 @@ contract Controller is AccessControl, Pausable{
 
     function unpaused() public onlyRole(PAUSER_ROLE) {
         _unpause();
+    }
+
+    function createProduct(
+        bytes32 _productName,
+        bytes32 _productDescription,
+        bytes32 _productLot,
+        bool _productPharmaService,
+        bool _productHospitalService,
+        bool _productAuthorization,
+        uint256 _productQuantity,
+        uint256 _productExpireDate
+    ) public {
+        productToken.safeMint(
+            _productName,
+            _productDescription,
+            _productLot,
+            _productPharmaService,
+            _productHospitalService,
+            _productAuthorization,
+            _productQuantity,
+            _productExpireDate
+        );
     }
 }
