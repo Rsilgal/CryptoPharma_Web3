@@ -15,6 +15,11 @@ contract PrescriptionToken is ERC721, ERC721Enumerable, Pausable, AccessControl,
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
 
+    uint256 public productId;
+    uint256 public amountToTake;
+    uint256 public coolDownHours; 
+    uint256 public productQuantity;
+
     constructor() ERC721("PrescriptionToken", "MTK") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
@@ -29,7 +34,11 @@ contract PrescriptionToken is ERC721, ERC721Enumerable, Pausable, AccessControl,
         _unpause();
     }
 
-    function safeMint(address to) public onlyRole(MINTER_ROLE) {
+    function safeMint(address to, uint256 _productId, uint256 _amountToTake, uint256 _coolDownHours, uint256 _productQuantity) public onlyRole(MINTER_ROLE) {
+        productId = _productId;
+        amountToTake = _amountToTake;
+        coolDownHours = _coolDownHours;
+        productQuantity = _productQuantity;
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
@@ -52,5 +61,15 @@ contract PrescriptionToken is ERC721, ERC721Enumerable, Pausable, AccessControl,
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+        function grantRoleMinter(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(MINTER_ROLE, account);
+        // TODO: Emit an event
+    }
+
+    function grantRoleAdmin(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(DEFAULT_ADMIN_ROLE, account);
+        //TODO: Emit an event
     }
 }
