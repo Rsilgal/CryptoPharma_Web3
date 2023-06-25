@@ -17,6 +17,7 @@ contract ProductToken is
 {
     using Counters for Counters.Counter;
 
+    uint256 public productQuantity;
     uint256 public productExpireDate;
     Counters.Counter private _tokenIdCounter;
 
@@ -24,7 +25,6 @@ contract ProductToken is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public productName;
     bytes32 public productDescription;
-    bytes32 public productQuantity;
     bytes32 public productLot;
     bytes32 public productGUID;
 
@@ -50,11 +50,11 @@ contract ProductToken is
     function safeMint(
         bytes32 _productName,
         bytes32 _productDescription,
-        bytes32 _productQuantity,
         bytes32 _productLot,
         bool _productPharmaService,
         bool _productHospitalService,
         bool _productAuthorization,
+        uint256 _productQuantity,
         uint256 _productExpireDate
     ) public onlyRole(MINTER_ROLE) {
         productName = _productName;
