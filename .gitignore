@@ -233,3 +233,14 @@ dist
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/node,solidity,visualstudiocode
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
