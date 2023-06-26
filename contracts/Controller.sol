@@ -79,5 +79,31 @@ contract Controller is AccessControl, Pausable {
         );
     }
 
-    
+    // TODO: Only this contract must create nfts
+    function buyProduct(uint256 productId, uint256 prescriptionId) external {
+        Product _product = getProduct(productId);
+        if (_product.NeedAuthorization) {
+            // TODO: Check Prescription
+            Prescription _prescription = getPrescription(prescriptionId);
+            require(_prescription.productId == productId, "Prescription is not valid.")
+        }
+        require(msg.value >= _product.Price, "Not enough money.");
+        _product.safeTransferFrom(address(this), msg.sender, productId)
+    }
+
+    function sellProduct(uint256 productId, uint256 newPrice) external {
+        Product _product = getProduct(productId);
+        require(productToken.ownerOf(productId) == msg.sender, "You are not the owner");
+        require(_product.NeedAuthorization == false, "This product need authorization to sell");
+        productToken.setPrice(productId, newPrice);
+        productToken.transferFrom(msg.sender, address(this), productId);
+    }
+
+    function getProduct(uint256 tokenId) external view returns (Product) {
+        return productToken.get(tokenId);
+    }
+
+    function getPrescription(uint256 tokenId) external view returns (Prescription) {
+        return prescriptionToken.get(tokenId);
+    }
 }
