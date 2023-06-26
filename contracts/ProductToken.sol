@@ -17,25 +17,33 @@ contract ProductToken is
 {
     using Counters for Counters.Counter;
 
-    uint256 public productQuantity;
-    uint256 public productExpireDate;
+    struct Product {
+        bytes32 Name;
+        bytes32 Desctiption;
+        bytes32 Lot;
+        uint256 Quantity;
+        uint256 ExpireDate;
+        uint256 Price;
+        bool PharmaService;
+        bool HospitalService;
+        bool NeedAuthorization;
+    }
+    public mapping (uint => Product) products;
+
     Counters.Counter private _tokenIdCounter;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public productName;
-    bytes32 public productDescription;
-    bytes32 public productLot;
-    bytes32 public productGUID;
-
-    bool public productPharmaService;
-    bool public productHospitalService;
-    bool public productAuthorization;
 
     constructor() ERC721("ProductToken", "MTK") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+    }
+
+    modifier _checkIfItExist(uint256 tokenId) {
+        require(_exists(tokenId), "Not exist a token with this Id");
+        _;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -55,18 +63,12 @@ contract ProductToken is
         bool _productHospitalService,
         bool _productAuthorization,
         uint256 _productQuantity,
-        uint256 _productExpireDate
+        uint256 _productExpireDate,
+        uint _productPrice
     ) public onlyRole(MINTER_ROLE) {
-        productName = _productName;
-        productDescription = _productDescription;
-        productQuantity = _productQuantity;
-        productLot = _productLot;
-        productPharmaService = _productPharmaService;
-        productHospitalService = _productHospitalService;
-        productAuthorization = _productAuthorization;
-        productExpireDate = _productExpireDate;
         //TODO: Check if there another product with the same data
         uint256 tokenId = _tokenIdCounter.current();
+        products[tokenId] = new Product(_productName, _productDescription, _productLot, _productQuantity, _productExpireDate, _productPrice, _productPharmaService, _productHospitalService, _productAuthorization)
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
     }
@@ -93,15 +95,29 @@ contract ProductToken is
         return super.supportsInterface(interfaceId);
     }
 
-    function grantRoleMinter(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function grantRoleMinter(
+        address account
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(MINTER_ROLE, account);
         // TODO: Emit an event
     }
 
-    function grantRoleAdmin(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function grantRoleAdmin(
+        address account
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(DEFAULT_ADMIN_ROLE, account);
         //TODO: Emit an event
     }
 
+    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) returns (Product) {
+        return products[tokenId];
+    }
 
+    function get(uint256 tokenId) external view returns (Product) {
+        return _get(tokenId);
+    }
+
+    function setPrice(uint256 tokenId, uint256 newPrice) external {
+        products[tokenId].Price = newPrice;
+    }
 }
