@@ -43,7 +43,7 @@ contract PrescriptionToken is
     }
 
     modifier _hasPermision(uint256 tokenId){
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || ownerOf(tokeId) === msg.sender, "Can't read this prescription");
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || ownerOf(tokenId) == msg.sender, "Can't read this prescription");
         _;
     }
 
@@ -63,7 +63,7 @@ contract PrescriptionToken is
         uint256 _productQuantity
     ) public onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
-        prescriptions[tokenId] = new Prescription(_productId, _amountToTake, _coolDownHours, _productQuantity, to)
+        prescriptions[tokenId] = Prescription(_productId, _amountToTake, _coolDownHours, _productQuantity, to);
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
     }
@@ -104,11 +104,11 @@ contract PrescriptionToken is
         //TODO: Emit an event
     }
 
-    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) _hasPermision(tokeId) returns (Prescription){
+    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) _hasPermision(tokenId) returns (Prescription memory){
         return prescriptions[tokenId];
     }
 
-    function get(uint256 tokenId) external view {
-        return _get(uint256 tokenId);
+    function get(uint256 tokenId) external view returns (Prescription memory) {
+        return _get(tokenId);
     }
 }

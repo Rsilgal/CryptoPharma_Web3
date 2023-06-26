@@ -28,7 +28,8 @@ contract ProductToken is
         bool HospitalService;
         bool NeedAuthorization;
     }
-    public mapping (uint => Product) products;
+    
+    mapping (uint => Product) products;
 
     Counters.Counter private _tokenIdCounter;
 
@@ -68,7 +69,7 @@ contract ProductToken is
     ) public onlyRole(MINTER_ROLE) {
         //TODO: Check if there another product with the same data
         uint256 tokenId = _tokenIdCounter.current();
-        products[tokenId] = new Product(_productName, _productDescription, _productLot, _productQuantity, _productExpireDate, _productPrice, _productPharmaService, _productHospitalService, _productAuthorization)
+        products[tokenId] = Product(_productName, _productDescription, _productLot, _productQuantity, _productExpireDate, _productPrice, _productPharmaService, _productHospitalService, _productAuthorization);
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
     }
@@ -109,11 +110,11 @@ contract ProductToken is
         //TODO: Emit an event
     }
 
-    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) returns (Product) {
+    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) returns (Product memory) {
         return products[tokenId];
     }
 
-    function get(uint256 tokenId) external view returns (Product) {
+    function get(uint256 tokenId) external view returns (Product memory) {
         return _get(tokenId);
     }
 

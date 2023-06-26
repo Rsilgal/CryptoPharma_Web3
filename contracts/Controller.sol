@@ -13,6 +13,26 @@ contract Controller is AccessControl, Pausable {
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
 
+    // struct Prescription {
+    //     uint256 productId;
+    //     uint256 amountToTake;
+    //     uint256 coolDownHours;
+    //     uint256 productQuantity;
+    //     address to;
+    // }
+
+    // struct Product {
+    //     bytes32 Name;
+    //     bytes32 Desctiption;
+    //     bytes32 Lot;
+    //     uint256 Quantity;
+    //     uint256 ExpireDate;
+    //     uint256 Price;
+    //     bool PharmaService;
+    //     bool HospitalService;
+    //     bool NeedAuthorization;
+    // }
+
     constructor(address _prescriptionToken, address _productToken) {
         prescriptionToken = PrescriptionToken(_prescriptionToken);
         productToken = ProductToken(_productToken);
@@ -49,7 +69,8 @@ contract Controller is AccessControl, Pausable {
         bool _productHospitalService,
         bool _productAuthorization,
         uint256 _productQuantity,
-        uint256 _productExpireDate
+        uint256 _productExpireDate,
+        uint256 _productPrice
     ) public onlyMiner {
         productToken.safeMint(
             _productName,
@@ -59,7 +80,8 @@ contract Controller is AccessControl, Pausable {
             _productHospitalService,
             _productAuthorization,
             _productQuantity,
-            _productExpireDate
+            _productExpireDate,
+            _productPrice
         );
     }
 
@@ -80,30 +102,42 @@ contract Controller is AccessControl, Pausable {
     }
 
     // TODO: Only this contract must create nfts
-    function buyProduct(uint256 productId, uint256 prescriptionId) external {
-        Product _product = getProduct(productId);
+    function buyProduct(uint256 productId, uint256 prescriptionId) external payable {
+        ProductToken.Product memory _product = getProduct(productId);
         if (_product.NeedAuthorization) {
             // TODO: Check Prescription
-            Prescription _prescription = getPrescription(prescriptionId);
-            require(_prescription.productId == productId, "Prescription is not valid.")
+            PrescriptionToken.Prescription memory _prescription = getPrescription(prescriptionId);
+            require(
+                _prescription.productId == productId,
+                "Prescription is not valid."
+            );
         }
         require(msg.value >= _product.Price, "Not enough money.");
-        _product.safeTransferFrom(address(this), msg.sender, productId)
+        productToken.transferFrom(address(this), msg.sender, productId);
     }
 
-    function sellProduct(uint256 productId, uint256 newPrice) external {
-        Product _product = getProduct(productId);
-        require(productToken.ownerOf(productId) == msg.sender, "You are not the owner");
-        require(_product.NeedAuthorization == false, "This product need authorization to sell");
+    function sellProduct(uint256 productId, uint256 newPrice) external payable {
+        ProductToken.Product memory _product = getProduct(productId);
+        require(
+            productToken.ownerOf(productId) == msg.sender,
+            "You are not the owner"
+        );
+        require(
+            _product.NeedAuthorization == false,
+            "This product need authorization to sell"
+        );
         productToken.setPrice(productId, newPrice);
         productToken.transferFrom(msg.sender, address(this), productId);
     }
 
-    function getProduct(uint256 tokenId) external view returns (Product) {
-        return productToken.get(tokenId);
+    function getProduct(uint256 tokenId) public view returns (ProductToken.Product memory) {
+        ProductToken.Product memory _product = productToken.get(tokenId);
+        return _product;
     }
 
-    function getPrescription(uint256 tokenId) external view returns (Prescription) {
+    function getPrescription(
+        uint256 tokenId
+    ) public view returns (PrescriptionToken.Prescription memory) {
         return prescriptionToken.get(tokenId);
     }
 }
