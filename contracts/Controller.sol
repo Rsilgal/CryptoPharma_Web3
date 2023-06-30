@@ -51,19 +51,21 @@ contract Controller is AccessControl, Pausable {
         bool _productAuthorization,
         uint256 _productQuantity,
         uint256 _productExpireDate,
-        uint256 _productPrice
+        uint256 _productPrice,
+        uint256 _purchaseQuantity
     ) public {
-        productToken.safeMint(
+        ProductToken.Product memory _product = ProductToken.Product(
             _productName,
             _productDescription,
             _productLot,
-            _productPharmaService,
-            _productHospitalService,
-            _productAuthorization,
             _productQuantity,
             _productExpireDate,
-            _productPrice
+            _productPrice,
+            _productPharmaService,
+            _productHospitalService,
+            _productAuthorization
         );
+        productToken.mint(msg.sender, _purchaseQuantity, _product);
     }
 
     function createPrescription(
@@ -82,8 +84,7 @@ contract Controller is AccessControl, Pausable {
         );
     }
 
-    // TODO: Only this contract must create nfts
-    function buyProduct(uint256 productId, uint256 prescriptionId) external payable {
+    function buyProduct(address seller, address buyer, uint256 productId, uint256 amount, uint256 prescriptionId) external payable {
         ProductToken.Product memory _product = getProduct(productId);
         if (_product.NeedAuthorization) {
             // TODO: Check Prescription
@@ -92,27 +93,27 @@ contract Controller is AccessControl, Pausable {
                 _prescription.productId == productId,
                 "Prescription is not valid."
             );
+            require(
+                _prescription.productQuantity <= amount,
+                "Can not buy that quantity"
+            );
         }
-        require(msg.value >= _product.Price, "Not enough money.");
-        productToken.transferFrom(address(this), msg.sender, productId);
+        require(productToken.balanceOf(seller, productId) >= amount, "Not enought product to sell");
+        require(msg.value >= _product.Price * amount, "Not enough money.");
+        productToken.safeTransferFrom(seller, buyer, productId, amount, "");
     }
 
-    function sellProduct(uint256 productId, uint256 newPrice) external payable {
+    function sellProduct(address seller, address buyer, uint256 productId, uint256 amount) external payable {
         ProductToken.Product memory _product = getProduct(productId);
-        require(
-            productToken.ownerOf(productId) == msg.sender,
-            "You are not the owner"
-        );
-        require(
-            _product.NeedAuthorization == false,
-            "This product need authorization to sell"
-        );
-        productToken.setPrice(productId, newPrice);
-        productToken.transferFrom(msg.sender, address(this), productId);
+        require(_product.NeedAuthorization == false, "Must not sell this product");
+        require(productToken.balanceOf(seller, productId) >= amount, "Not enought product to sell");
+        require(msg.value >= _product.Price * amount, "Not enought money");
+        
+        productToken.safeTransferFrom(seller, buyer, productId, amount, "");
     }
 
     function getProduct(uint256 tokenId) public view returns (ProductToken.Product memory) {
-        ProductToken.Product memory _product = productToken.get(tokenId);
+        ProductToken.Product memory _product = productToken.getData(tokenId);
         return _product;
     }
 
