@@ -9,7 +9,7 @@ import "./ProductToken.sol";
 
 contract Controller is AccessControl, Pausable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
 
@@ -17,7 +17,7 @@ contract Controller is AccessControl, Pausable {
         prescriptionToken = PrescriptionToken(_prescriptionToken);
         productToken = ProductToken(_productToken);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
     }
 
@@ -30,7 +30,7 @@ contract Controller is AccessControl, Pausable {
     }
 
     modifier onlyMiner() {
-        require(hasRole(MINER_ROLE, msg.sender), "Restricted to miners");
+        require(hasRole(MINTER_ROLE, msg.sender), "Restricted to miners");
         _;
     }
 
@@ -74,7 +74,7 @@ contract Controller is AccessControl, Pausable {
         uint256 amountToTake,
         uint256 coolDownHours,
         uint256 productQuantity
-    ) public onlyMiner() {
+    ) public onlyMiner {
         prescriptionToken.safeMint(
             to,
             productId,
@@ -84,11 +84,18 @@ contract Controller is AccessControl, Pausable {
         );
     }
 
-    function buyProduct(address seller, address buyer, uint256 productId, uint256 amount, uint256 prescriptionId) external payable {
+    function buyProduct(
+        address seller,
+        address buyer,
+        uint256 productId,
+        uint256 amount,
+        uint256 prescriptionId
+    ) external payable {
         ProductToken.Product memory _product = getProduct(productId);
         if (_product.NeedAuthorization) {
             // TODO: Check Prescription
-            PrescriptionToken.Prescription memory _prescription = getPrescription(prescriptionId);
+            PrescriptionToken.Prescription
+                memory _prescription = getPrescription(prescriptionId);
             require(
                 _prescription.productId == productId,
                 "Prescription is not valid."
@@ -98,21 +105,37 @@ contract Controller is AccessControl, Pausable {
                 "Can not buy that quantity"
             );
         }
-        require(productToken.balanceOf(seller, productId) >= amount, "Not enought product to sell");
+        require(
+            productToken.balanceOf(seller, productId) >= amount,
+            "Not enought product to sell"
+        );
         require(msg.value >= _product.Price * amount, "Not enough money.");
         productToken.safeTransferFrom(seller, buyer, productId, amount, "");
     }
 
-    function sellProduct(address seller, address buyer, uint256 productId, uint256 amount) external payable {
+    function sellProduct(
+        address seller,
+        address buyer,
+        uint256 productId,
+        uint256 amount
+    ) external payable {
         ProductToken.Product memory _product = getProduct(productId);
-        require(_product.NeedAuthorization == false, "Must not sell this product");
-        require(productToken.balanceOf(seller, productId) >= amount, "Not enought product to sell");
+        require(
+            _product.NeedAuthorization == false,
+            "Must not sell this product"
+        );
+        require(
+            productToken.balanceOf(seller, productId) >= amount,
+            "Not enought product to sell"
+        );
         require(msg.value >= _product.Price * amount, "Not enought money");
-        
+
         productToken.safeTransferFrom(seller, buyer, productId, amount, "");
     }
 
-    function getProduct(uint256 tokenId) public view returns (ProductToken.Product memory) {
+    function getProduct(
+        uint256 tokenId
+    ) public view returns (ProductToken.Product memory) {
         ProductToken.Product memory _product = productToken.getData(tokenId);
         return _product;
     }
@@ -122,4 +145,18 @@ contract Controller is AccessControl, Pausable {
     ) public view returns (PrescriptionToken.Prescription memory) {
         return prescriptionToken.get(tokenId);
     }
+
+    // function grantRoleMinter(
+    //     address account
+    // ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    //     _grantRole(MINTER_ROLE, account);
+    //     // TODO: Emit an event
+    // }
+
+    // function grantRoleAdmin(
+    //     address account
+    // ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    //     _grantRole(DEFAULT_ADMIN_ROLE, account);
+    //     //TODO: Emit an event
+    // }
 }
