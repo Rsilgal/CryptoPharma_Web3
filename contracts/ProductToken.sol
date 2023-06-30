@@ -71,7 +71,7 @@ contract ProductToken is
         uint256 tokenId = _tokenIdCounter.current();
         products[tokenId] = Product(_productName, _productDescription, _productLot, _productQuantity, _productExpireDate, _productPrice, _productPharmaService, _productHospitalService, _productAuthorization);
         _tokenIdCounter.increment();
-        _safeMint(msg.sender, tokenId);
+        _mint(msg.sender, tokenId);
     }
 
     function _beforeTokenTransfer(
@@ -118,7 +118,7 @@ contract ProductToken is
         return _get(tokenId);
     }
 
-    function setPrice(uint256 tokenId, uint256 newPrice) external {
+    function setPrice(uint256 tokenId, uint256 newPrice) _checkIfItExist(tokenId) external {
         products[tokenId].Price = newPrice;
     }
 }

@@ -13,30 +13,11 @@ contract Controller is AccessControl, Pausable {
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
 
-    // struct Prescription {
-    //     uint256 productId;
-    //     uint256 amountToTake;
-    //     uint256 coolDownHours;
-    //     uint256 productQuantity;
-    //     address to;
-    // }
-
-    // struct Product {
-    //     bytes32 Name;
-    //     bytes32 Desctiption;
-    //     bytes32 Lot;
-    //     uint256 Quantity;
-    //     uint256 ExpireDate;
-    //     uint256 Price;
-    //     bool PharmaService;
-    //     bool HospitalService;
-    //     bool NeedAuthorization;
-    // }
-
     constructor(address _prescriptionToken, address _productToken) {
         prescriptionToken = PrescriptionToken(_prescriptionToken);
         productToken = ProductToken(_productToken);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
     }
 
@@ -71,7 +52,7 @@ contract Controller is AccessControl, Pausable {
         uint256 _productQuantity,
         uint256 _productExpireDate,
         uint256 _productPrice
-    ) public onlyMiner {
+    ) public {
         productToken.safeMint(
             _productName,
             _productDescription,
@@ -91,7 +72,7 @@ contract Controller is AccessControl, Pausable {
         uint256 amountToTake,
         uint256 coolDownHours,
         uint256 productQuantity
-    ) public onlyMiner {
+    ) public onlyMiner() {
         prescriptionToken.safeMint(
             to,
             productId,
