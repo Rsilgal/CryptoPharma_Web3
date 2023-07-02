@@ -2,10 +2,11 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
 
-  const Controller = await ethers.getContractFactory("Controller");
-  // const controller = await Controller.deploy()
-  const controller = await ethers.deployContract("Controller");
+  const productTokenContract = await ethers.deployContract('ProductToken');
+  const prescriptionTokenContract = await ethers.deployContract('PrescriptionToken');
 
+  const Controller = await ethers.getContractFactory('Controller')
+  const controller = await Controller.deploy(prescriptionTokenContract.address ,productTokenContract.address)
 
   await controller.deployed()
 

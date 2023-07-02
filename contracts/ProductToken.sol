@@ -60,12 +60,8 @@ contract ProductToken is
         address _account,
         uint256 _amount,
         Product memory _data
-    ) public onlyRole(MINTER_ROLE) // payable
+    ) public onlyRole(MINTER_ROLE)
     {
-        // require(_amount > 0, "Inavalid amount");
-        // require(msg.value >= _data.Price * _amount, "Not enought money");
-        //TODO: Set price for minting products
-
         uint256 _id = _tokenIdCounter.current();
         _mint(_account, _id, _amount, "");
         products[_id] = _data;
@@ -107,9 +103,4 @@ contract ProductToken is
         );
         _p = products[_id];
     }
-
-    // function setPrice(uint256 _id, uint256 _newPrice) external onlyRole(MINTER_ROLE) {
-    //     require(exists(_id), "Non existent token");
-    //     products[_id].Price = _newPrice;
-    // }
 }
