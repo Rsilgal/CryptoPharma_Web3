@@ -37,6 +37,8 @@ contract ProductToken is
 
     Counters.Counter private _tokenIdCounter;
 
+    event productMinted();
+
     constructor() ERC1155("") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(URI_SETTER_ROLE, msg.sender);
@@ -66,6 +68,7 @@ contract ProductToken is
         _mint(_account, _id, _amount, "");
         products[_id] = _data;
         _tokenIdCounter.increment();
+        emit productMinted();
     }
 
     function mintBatch(

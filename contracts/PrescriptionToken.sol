@@ -31,6 +31,8 @@ contract PrescriptionToken is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
 
+    event prescriptionMinted();
+
     constructor() ERC721("PrescriptionToken", "MTK") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
@@ -66,6 +68,7 @@ contract PrescriptionToken is
         prescriptions[tokenId] = Prescription(_productId, _amountToTake, _coolDownHours, _productQuantity, to);
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
+        emit prescriptionMinted();
     }
 
     function _beforeTokenTransfer(
