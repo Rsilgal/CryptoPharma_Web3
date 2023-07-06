@@ -13,9 +13,12 @@ contract Controller is AccessControl, Pausable {
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
 
-    constructor(address _prescriptionToken, address _productToken) {
-        prescriptionToken = PrescriptionToken(_prescriptionToken);
-        productToken = ProductToken(_productToken);
+    event productCreated();
+    event prescriptionCreated();
+    event purchasedProduct();
+    event soldProduct();
+
+    constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
@@ -43,9 +46,9 @@ contract Controller is AccessControl, Pausable {
     }
 
     function createProduct(
-        bytes32 _productName,
-        bytes32 _productDescription,
-        bytes32 _productLot,
+        string memory _productName,
+        string memory _productDescription,
+        string memory _productLot,
         bool _productPharmaService,
         bool _productHospitalService,
         bool _productAuthorization,
@@ -53,7 +56,8 @@ contract Controller is AccessControl, Pausable {
         uint256 _productExpireDate,
         uint256 _productPrice,
         uint256 _purchaseQuantity
-    ) public {
+    ) public onlyMiner {
+        address originalSender = msg.sender;
         ProductToken.Product memory _product = ProductToken.Product(
             _productName,
             _productDescription,
@@ -65,7 +69,8 @@ contract Controller is AccessControl, Pausable {
             _productHospitalService,
             _productAuthorization
         );
-        productToken.mint(msg.sender, _purchaseQuantity, _product);
+        productToken.mint(originalSender, _purchaseQuantity, _product);
+        emit productCreated();
     }
 
     function createPrescription(
@@ -82,6 +87,7 @@ contract Controller is AccessControl, Pausable {
             coolDownHours,
             productQuantity
         );
+        emit prescriptionCreated();
     }
 
     function buyProduct(
@@ -111,6 +117,7 @@ contract Controller is AccessControl, Pausable {
         );
         require(msg.value >= _product.Price * amount, "Not enough money.");
         productToken.safeTransferFrom(seller, buyer, productId, amount, "");
+        emit purchasedProduct();
     }
 
     function sellProduct(
@@ -131,6 +138,7 @@ contract Controller is AccessControl, Pausable {
         require(msg.value >= _product.Price * amount, "Not enought money");
 
         productToken.safeTransferFrom(seller, buyer, productId, amount, "");
+        emit soldProduct();
     }
 
     function getProduct(
@@ -146,17 +154,11 @@ contract Controller is AccessControl, Pausable {
         return prescriptionToken.get(tokenId);
     }
 
-    // function grantRoleMinter(
-    //     address account
-    // ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     _grantRole(MINTER_ROLE, account);
-    //     // TODO: Emit an event
-    // }
+    function setProductTokenAddress(address _productToken) external onlyAdmin {
+        productToken = ProductToken(_productToken);
+    }
 
-    // function grantRoleAdmin(
-    //     address account
-    // ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-    //     _grantRole(DEFAULT_ADMIN_ROLE, account);
-    //     //TODO: Emit an event
-    // }
+    function setPrescriptionTokenAddress(address _prescriptionToken) external onlyAdmin {
+        prescriptionToken = PrescriptionToken(_prescriptionToken);
+    }
 }
