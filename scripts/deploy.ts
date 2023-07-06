@@ -6,7 +6,7 @@ async function main() {
   const prescriptionTokenContract = await ethers.deployContract('PrescriptionToken');
 
   const Controller = await ethers.getContractFactory('Controller')
-  const controller = await Controller.deploy(prescriptionTokenContract.address ,productTokenContract.address)
+  const controller = await Controller.deploy();
 
   await controller.deployed()
 
