@@ -22,9 +22,9 @@ contract ProductToken is
     using Counters for Counters.Counter;
 
     struct Product {
-        bytes32 Name;
-        bytes32 Desctiption;
-        bytes32 Lot;
+        string Name;
+        string Desctiption;
+        string Lot;
         uint256 Quantity;
         uint256 ExpireDate;
         uint256 Price;
