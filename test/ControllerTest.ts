@@ -34,9 +34,6 @@ describe("Controller", function() {
     it("Crear un token de producto", async function () {
         const { controller, owner, addr1} = await deployAndSetupContracts();
 
-        // const texto = ethers.utils.formatBytes32String('hola')
-
-        // await controller.connect(owner).createProduct("texto", "texto", "texto", false, false, false, 5,5,5,5);
         await controller.createProduct("texto", "texto", "texto", false, false, false, 5,5,5,5);
 
 

@@ -10,6 +10,11 @@ async function main() {
 
   await controller.deployed()
 
+  await controller.setProductTokenAddress(productTokenContract.address);
+  await controller.setPrescriptionTokenAddress(prescriptionTokenContract.address);
+
+  await productTokenContract.grantRole(productTokenContract.MINTER_ROLE(), controller.address);
+  await prescriptionTokenContract.grantRole(prescriptionTokenContract.MINTER_ROLE(), controller.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

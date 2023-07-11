@@ -120,6 +120,7 @@ contract Controller is AccessControl, Pausable {
         emit purchasedProduct();
     }
 
+    //TODO: Comprobar que el msg.sender sea el buyer
     function sellProduct(
         address seller,
         address buyer,
