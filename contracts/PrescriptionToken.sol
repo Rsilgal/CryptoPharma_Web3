@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
-import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract PrescriptionToken is
     ERC721,
@@ -44,8 +44,8 @@ contract PrescriptionToken is
         _;
     }
 
-    modifier _hasPermision(uint256 tokenId){
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || ownerOf(tokenId) == msg.sender, "Can't read this prescription");
+    modifier _hasPermision(uint256 tokenId, address to){
+        require(hasRole(DEFAULT_ADMIN_ROLE, to) || ownerOf(tokenId) == to, "Can't read this prescription");
         _;
     }
 
@@ -107,11 +107,11 @@ contract PrescriptionToken is
         //TODO: Emit an event
     }
 
-    function _get(uint256 tokenId) internal view _checkIfItExist(tokenId) _hasPermision(tokenId) returns (Prescription memory){
+    function _get(uint256 tokenId, address to) internal view _checkIfItExist(tokenId) _hasPermision(tokenId, to) returns (Prescription memory){
         return prescriptions[tokenId];
     }
 
-    function get(uint256 tokenId) external view returns (Prescription memory) {
-        return _get(tokenId);
+    function get(uint256 tokenId, address to) external view returns (Prescription memory) {
+        return _get(tokenId, to);
     }
 }
