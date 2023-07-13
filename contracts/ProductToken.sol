@@ -64,8 +64,7 @@ contract ProductToken is
         address _account,
         uint256 _amount,
         Product memory _data
-    ) public onlyRole(MINTER_ROLE) nonReentrant()
-    {
+    ) public onlyRole(MINTER_ROLE) nonReentrant {
         uint256 _id = _tokenIdCounter.current();
         _mint(_account, _id, _amount, "");
         products[_id] = _data;
@@ -109,11 +108,15 @@ contract ProductToken is
         _p = products[_id];
     }
 
-    function defineApproved(address approvedAccount) onlyRole(DEFAULT_ADMIN_ROLE) public nonReentrant {
+    function defineApproved(
+        address approvedAccount
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         setApprovalForAll(approvedAccount, true);
     }
 
-    function revokeApproved(address account) onlyRole(DEFAULT_ADMIN_ROLE) public nonReentrant {
+    function revokeApproved(
+        address account
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         setApprovalForAll(account, false);
     }
 }
