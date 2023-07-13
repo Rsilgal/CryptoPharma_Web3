@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 
 contract ProductToken is
     ERC1155,
     AccessControl,
     Pausable,
     ERC1155Burnable,
-    ERC1155Supply
+    ERC1155Supply,
+    ReentrancyGuard
 {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -62,7 +64,7 @@ contract ProductToken is
         address _account,
         uint256 _amount,
         Product memory _data
-    ) public onlyRole(MINTER_ROLE)
+    ) public onlyRole(MINTER_ROLE) nonReentrant()
     {
         uint256 _id = _tokenIdCounter.current();
         _mint(_account, _id, _amount, "");
@@ -107,11 +109,11 @@ contract ProductToken is
         _p = products[_id];
     }
 
-    function defineApproved(address approvedAccount) onlyRole(DEFAULT_ADMIN_ROLE) public {
+    function defineApproved(address approvedAccount) onlyRole(DEFAULT_ADMIN_ROLE) public nonReentrant {
         setApprovalForAll(approvedAccount, true);
     }
 
-    function revokeApproved(address account) onlyRole(DEFAULT_ADMIN_ROLE) public {
+    function revokeApproved(address account) onlyRole(DEFAULT_ADMIN_ROLE) public nonReentrant {
         setApprovalForAll(account, false);
     }
 }

@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./PrescriptionToken.sol";
 import "./ProductToken.sol";
 
-contract Controller is AccessControl, Pausable {
+contract Controller is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     PrescriptionToken private prescriptionToken;
@@ -57,7 +58,7 @@ contract Controller is AccessControl, Pausable {
         uint256 _productExpireDate,
         uint256 _productPrice,
         uint256 _purchaseQuantity
-    ) public onlyMiner {
+    ) public onlyMiner nonReentrant {
         address originalSender = msg.sender;
         ProductToken.Product memory _product = ProductToken.Product(
             _productName,
@@ -80,7 +81,7 @@ contract Controller is AccessControl, Pausable {
         uint256 amountToTake,
         uint256 coolDownHours,
         uint256 productQuantity
-    ) public onlyMiner {
+    ) public onlyMiner nonReentrant {
         prescriptionToken.safeMint(
             to,
             productId,
@@ -96,7 +97,7 @@ contract Controller is AccessControl, Pausable {
         uint256 productId,
         uint256 amount,
         uint256 prescriptionId
-    ) external payable {
+    ) external payable nonReentrant {
         ProductToken.Product memory _product = getProduct(productId);
         if (_product.NeedAuthorization) {
             PrescriptionToken.Prescription
@@ -126,7 +127,7 @@ contract Controller is AccessControl, Pausable {
     function sellProduct(
         uint256 productId,
         uint256 amount
-    ) external payable {
+    ) external payable nonReentrant {
         ProductToken.Product memory _product = getProduct(productId);
         require(_product.NeedAuthorization == false || hasRole(MINTER_ROLE, msg.sender),
          "Must not sell this product.");
@@ -152,11 +153,11 @@ contract Controller is AccessControl, Pausable {
         return prescriptionToken.get(tokenId, msg.sender);
     }
 
-    function setProductTokenAddress(address _productToken) external onlyAdmin {
+    function setProductTokenAddress(address _productToken) external onlyAdmin nonReentrant {
         productToken = ProductToken(_productToken);
     }
 
-    function setPrescriptionTokenAddress(address _prescriptionToken) external onlyAdmin {
+    function setPrescriptionTokenAddress(address _prescriptionToken) external onlyAdmin nonReentrant {
         prescriptionToken = PrescriptionToken(_prescriptionToken);
     }
 }

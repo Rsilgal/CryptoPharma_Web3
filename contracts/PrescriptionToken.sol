@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract PrescriptionToken is
     ERC721,
     ERC721Enumerable,
     Pausable,
     AccessControl,
-    ERC721Burnable
+    ERC721Burnable,
+    ReentrancyGuard
 {
     using Counters for Counters.Counter;
 
@@ -63,7 +65,7 @@ contract PrescriptionToken is
         uint256 _amountToTake,
         uint256 _coolDownHours,
         uint256 _productQuantity
-    ) public onlyRole(MINTER_ROLE) {
+    ) public onlyRole(MINTER_ROLE) nonReentrant() {
         uint256 tokenId = _tokenIdCounter.current();
         prescriptions[tokenId] = Prescription(_productId, _amountToTake, _coolDownHours, _productQuantity, to);
         _tokenIdCounter.increment();
