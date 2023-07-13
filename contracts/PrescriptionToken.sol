@@ -27,7 +27,7 @@ contract PrescriptionToken is
         address to;
     }
 
-    mapping (uint => Prescription) prescriptions;
+    mapping(uint => Prescription) prescriptions;
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -46,8 +46,11 @@ contract PrescriptionToken is
         _;
     }
 
-    modifier _hasPermision(uint256 tokenId, address to){
-        require(hasRole(DEFAULT_ADMIN_ROLE, to) || ownerOf(tokenId) == to, "Can't read this prescription");
+    modifier _hasPermision(uint256 tokenId, address to) {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, to) || ownerOf(tokenId) == to,
+            "Can't read this prescription"
+        );
         _;
     }
 
@@ -65,9 +68,15 @@ contract PrescriptionToken is
         uint256 _amountToTake,
         uint256 _coolDownHours,
         uint256 _productQuantity
-    ) public onlyRole(MINTER_ROLE) nonReentrant() {
+    ) public onlyRole(MINTER_ROLE) nonReentrant {
         uint256 tokenId = _tokenIdCounter.current();
-        prescriptions[tokenId] = Prescription(_productId, _amountToTake, _coolDownHours, _productQuantity, to);
+        prescriptions[tokenId] = Prescription(
+            _productId,
+            _amountToTake,
+            _coolDownHours,
+            _productQuantity,
+            to
+        );
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         emit prescriptionMinted();
@@ -109,11 +118,23 @@ contract PrescriptionToken is
         //TODO: Emit an event
     }
 
-    function _get(uint256 tokenId, address to) internal view _checkIfItExist(tokenId) _hasPermision(tokenId, to) returns (Prescription memory){
+    function _get(
+        uint256 tokenId,
+        address to
+    )
+        internal
+        view
+        _checkIfItExist(tokenId)
+        _hasPermision(tokenId, to)
+        returns (Prescription memory)
+    {
         return prescriptions[tokenId];
     }
 
-    function get(uint256 tokenId, address to) external view returns (Prescription memory) {
+    function get(
+        uint256 tokenId,
+        address to
+    ) external view returns (Prescription memory) {
         return _get(tokenId, to);
     }
 }
