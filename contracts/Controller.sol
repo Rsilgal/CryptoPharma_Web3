@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.9;
 
-import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "./PrescriptionToken.sol";
 import "./ProductToken.sol";
 
@@ -12,6 +12,7 @@ contract Controller is AccessControl, Pausable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
+    mapping(address => mapping(address => mapping(uint => uint))) public approvedTokensToTransfer ;
 
     event productCreated();
     event prescriptionCreated();
@@ -92,14 +93,12 @@ contract Controller is AccessControl, Pausable {
 
     function buyProduct(
         address seller,
-        address buyer,
         uint256 productId,
         uint256 amount,
         uint256 prescriptionId
     ) external payable {
         ProductToken.Product memory _product = getProduct(productId);
         if (_product.NeedAuthorization) {
-            // TODO: Check Prescription
             PrescriptionToken.Prescription
                 memory _prescription = getPrescription(prescriptionId);
             require(
@@ -111,34 +110,32 @@ contract Controller is AccessControl, Pausable {
                 "Can not buy that quantity"
             );
         }
+        require(approvedTokensToTransfer[seller][address(productToken)][productId] >= amount, 
+        "Must not sell this product");
         require(
             productToken.balanceOf(seller, productId) >= amount,
             "Not enought product to sell"
         );
-        require(msg.value >= _product.Price * amount, "Not enough money.");
-        productToken.safeTransferFrom(seller, buyer, productId, amount, "");
+         require(msg.value >= _product.Price * amount, "Not enough money.");
+        approvedTokensToTransfer[seller][address(productToken)][productId] -= amount;
+        productToken.safeTransferFrom(seller, msg.sender, productId, amount, "");
         emit purchasedProduct();
     }
 
     //TODO: Comprobar que el msg.sender sea el buyer
     function sellProduct(
-        address seller,
-        address buyer,
         uint256 productId,
         uint256 amount
     ) external payable {
         ProductToken.Product memory _product = getProduct(productId);
-        require(
-            _product.NeedAuthorization == false,
-            "Must not sell this product"
-        );
-        require(
-            productToken.balanceOf(seller, productId) >= amount,
-            "Not enought product to sell"
-        );
-        require(msg.value >= _product.Price * amount, "Not enought money");
+        require(_product.NeedAuthorization == false || hasRole(MINTER_ROLE, msg.sender),
+         "Must not sell this product.");
+        require(productToken.balanceOf(msg.sender, productId) >= amount,
+         "Not enought product to sell.");
 
-        productToken.safeTransferFrom(seller, buyer, productId, amount, "");
+        require(msg.value >= _product.Price * amount, "Not enough money.");
+        approvedTokensToTransfer[msg.sender][address(productToken)][productId] = amount;
+
         emit soldProduct();
     }
 
@@ -152,7 +149,7 @@ contract Controller is AccessControl, Pausable {
     function getPrescription(
         uint256 tokenId
     ) public view returns (PrescriptionToken.Prescription memory) {
-        return prescriptionToken.get(tokenId);
+        return prescriptionToken.get(tokenId, msg.sender);
     }
 
     function setProductTokenAddress(address _productToken) external onlyAdmin {
