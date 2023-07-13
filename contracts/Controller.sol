@@ -136,7 +136,6 @@ contract Controller is AccessControl, Pausable, ReentrancyGuard {
         emit purchasedProduct();
     }
 
-    //TODO: Comprobar que el msg.sender sea el buyer
     function sellProduct(
         uint256 productId,
         uint256 amount
