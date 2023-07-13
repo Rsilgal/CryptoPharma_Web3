@@ -13,7 +13,8 @@ contract Controller is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     PrescriptionToken private prescriptionToken;
     ProductToken private productToken;
-    mapping(address => mapping(address => mapping(uint => uint))) public approvedTokensToTransfer ;
+    mapping(address => mapping(address => mapping(uint => uint)))
+        public approvedTokensToTransfer;
 
     event productCreated();
     event prescriptionCreated();
@@ -111,15 +112,27 @@ contract Controller is AccessControl, Pausable, ReentrancyGuard {
                 "Can not buy that quantity"
             );
         }
-        require(approvedTokensToTransfer[seller][address(productToken)][productId] >= amount, 
-        "Must not sell this product");
+        require(
+            approvedTokensToTransfer[seller][address(productToken)][
+                productId
+            ] >= amount,
+            "Must not sell this product"
+        );
         require(
             productToken.balanceOf(seller, productId) >= amount,
             "Not enought product to sell"
         );
-         require(msg.value >= _product.Price * amount, "Not enough money.");
-        approvedTokensToTransfer[seller][address(productToken)][productId] -= amount;
-        productToken.safeTransferFrom(seller, msg.sender, productId, amount, "");
+        require(msg.value >= _product.Price * amount, "Not enough money.");
+        approvedTokensToTransfer[seller][address(productToken)][
+            productId
+        ] -= amount;
+        productToken.safeTransferFrom(
+            seller,
+            msg.sender,
+            productId,
+            amount,
+            ""
+        );
         emit purchasedProduct();
     }
 
@@ -129,13 +142,20 @@ contract Controller is AccessControl, Pausable, ReentrancyGuard {
         uint256 amount
     ) external payable nonReentrant {
         ProductToken.Product memory _product = getProduct(productId);
-        require(_product.NeedAuthorization == false || hasRole(MINTER_ROLE, msg.sender),
-         "Must not sell this product.");
-        require(productToken.balanceOf(msg.sender, productId) >= amount,
-         "Not enought product to sell.");
+        require(
+            _product.NeedAuthorization == false ||
+                hasRole(MINTER_ROLE, msg.sender),
+            "Must not sell this product."
+        );
+        require(
+            productToken.balanceOf(msg.sender, productId) >= amount,
+            "Not enought product to sell."
+        );
 
         require(msg.value >= _product.Price * amount, "Not enough money.");
-        approvedTokensToTransfer[msg.sender][address(productToken)][productId] = amount;
+        approvedTokensToTransfer[msg.sender][address(productToken)][
+            productId
+        ] = amount;
 
         emit soldProduct();
     }
@@ -153,11 +173,15 @@ contract Controller is AccessControl, Pausable, ReentrancyGuard {
         return prescriptionToken.get(tokenId, msg.sender);
     }
 
-    function setProductTokenAddress(address _productToken) external onlyAdmin nonReentrant {
+    function setProductTokenAddress(
+        address _productToken
+    ) external onlyAdmin nonReentrant {
         productToken = ProductToken(_productToken);
     }
 
-    function setPrescriptionTokenAddress(address _prescriptionToken) external onlyAdmin nonReentrant {
+    function setPrescriptionTokenAddress(
+        address _prescriptionToken
+    ) external onlyAdmin nonReentrant {
         prescriptionToken = PrescriptionToken(_prescriptionToken);
     }
 }
